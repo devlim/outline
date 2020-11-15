@@ -70,21 +70,24 @@ const Document = sequelize.define(
         },
       },
     },
-    version: DataTypes.SMALLINT,
-    template: DataTypes.BOOLEAN,
-    editorVersion: DataTypes.STRING,
     text: DataTypes.TEXT,
 
+    parentDocumentId: DataTypes.UUID,
+    revisionCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    collaboratorIds: DataTypes.ARRAY(DataTypes.UUID),
+    publishedAt: DataTypes.DATE,
+    archivedAt: DataTypes.DATE,
+    isWelcome: { type: DataTypes.BOOLEAN, defaultValue: false },
+    editorVersion: DataTypes.STRING,
+    version: DataTypes.SMALLINT,
     // backup contains a record of text at the moment it was converted to v2
     // this is a safety measure during deployment of new editor and will be
     // dropped in a future update
     backup: DataTypes.TEXT,
-    isWelcome: { type: DataTypes.BOOLEAN, defaultValue: false },
-    revisionCount: { type: DataTypes.INTEGER, defaultValue: 0 },
-    archivedAt: DataTypes.DATE,
-    publishedAt: DataTypes.DATE,
-    parentDocumentId: DataTypes.UUID,
-    collaboratorIds: DataTypes.ARRAY(DataTypes.UUID),
+    template: DataTypes.BOOLEAN,
   },
   {
     paranoid: true,
