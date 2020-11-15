@@ -71,14 +71,24 @@ const Document = sequelize.define(
       },
     },
     text: DataTypes.TEXT,
-
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    userId: DataTypes.UUID,
+    collectionId: DataTypes.UUID,
+    teamId: DataTypes.UUID,
     parentDocumentId: DataTypes.UUID,
+    lastModifiedById: DataTypes.UUID,
     revisionCount: {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    // searchVector
+    deletedAt: DataTypes.DATE,
+    createdById: DataTypes.UUID,
     collaboratorIds: DataTypes.ARRAY(DataTypes.UUID),
+    emoji: DataTypes.STRING,
     publishedAt: DataTypes.DATE,
+    pinnedById: DataTypes.UUID,
     archivedAt: DataTypes.DATE,
     isWelcome: { type: DataTypes.BOOLEAN, defaultValue: false },
     editorVersion: DataTypes.STRING,
@@ -376,20 +386,17 @@ Document.searchForUser = async (
   "searchVector" @@ to_tsquery('english', :query) AND
     "teamId" = :teamId AND
     "collectionId" IN(:collectionIds) AND
-    ${
-      options.dateFilter ? '"updatedAt" > now() - interval :dateFilter AND' : ""
+    ${options.dateFilter ? '"updatedAt" > now() - interval :dateFilter AND' : ""
     }
-    ${
-      options.collaboratorIds
-        ? '"collaboratorIds" @> ARRAY[:collaboratorIds]::uuid[] AND'
-        : ""
+    ${options.collaboratorIds
+      ? '"collaboratorIds" @> ARRAY[:collaboratorIds]::uuid[] AND'
+      : ""
     }
     ${options.includeArchived ? "" : '"archivedAt" IS NULL AND'}
     "deletedAt" IS NULL AND
-    ${
-      options.includeDrafts
-        ? '("publishedAt" IS NOT NULL OR "createdById" = :userId)'
-        : '"publishedAt" IS NOT NULL'
+    ${options.includeDrafts
+      ? '("publishedAt" IS NOT NULL OR "createdById" = :userId)'
+      : '"publishedAt" IS NOT NULL'
     }
   `;
 
