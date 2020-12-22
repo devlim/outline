@@ -6,6 +6,7 @@ import Koa from "koa";
 import Router from "koa-router";
 import sendfile from "koa-sendfile";
 import serve from "koa-static";
+import { languages } from "../shared/i18n";
 import environment from "./env";
 import apexRedirect from "./middlewares/apexRedirect";
 import { opensearchResponse } from "./utils/opensearch";
@@ -71,6 +72,26 @@ if (process.env.NODE_ENV === "production") {
     await sendfile(ctx, path.join(__dirname, "../app/", ctx.path.substring(8)));
   });
 }
+
+router.get("/locales/:lng.json", async (ctx) => {
+  let { lng } = ctx.params;
+
+  if (!languages.includes(lng)) {
+    ctx.status = 404;
+    return;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    ctx.set({
+      "Cache-Control": `max-age=${7 * 24 * 60 * 60}`,
+    });
+  }
+
+  await sendfile(
+    ctx,
+    path.join(__dirname, "../shared/i18n/locales", lng, "translation.json")
+  );
+});
 
 router.get("/robots.txt", (ctx) => {
   ctx.body = robotsResponse(ctx);

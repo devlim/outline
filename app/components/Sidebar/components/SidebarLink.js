@@ -1,25 +1,23 @@
 // @flow
-import { observer } from "mobx-react";
-import { CollapsedIcon } from "outline-icons";
 import * as React from "react";
 import { withRouter, NavLink } from "react-router-dom";
 import styled, { withTheme } from "styled-components";
-import Flex from "components/Flex";
 import { type Theme } from "types";
 
 type Props = {
   to?: string | Object,
   href?: string | Object,
+  innerRef?: (?HTMLElement) => void,
   onClick?: (SyntheticEvent<>) => void,
+  onMouseEnter?: (SyntheticEvent<>) => void,
   children?: React.Node,
   icon?: React.Node,
-  expanded?: boolean,
   label?: React.Node,
   menu?: React.Node,
   menuOpen?: boolean,
-  hideDisclosure?: boolean,
   iconColor?: string,
   active?: boolean,
+  isActiveDrop?: boolean,
   theme: Theme,
   exact?: boolean,
   depth?: number,
@@ -29,75 +27,50 @@ function SidebarLink({
   icon,
   children,
   onClick,
+  onMouseEnter,
   to,
   label,
   active,
+  isActiveDrop,
   menu,
   menuOpen,
-  hideDisclosure,
   theme,
   exact,
   href,
+  innerRef,
   depth,
   ...rest
 }: Props) {
-  const [expanded, setExpanded] = React.useState(rest.expanded);
-
   const style = React.useMemo(() => {
     return {
       paddingLeft: `${(depth || 0) * 16 + 16}px`,
     };
   }, [depth]);
 
-  React.useEffect(() => {
-    if (rest.expanded !== undefined) {
-      setExpanded(rest.expanded);
-    }
-  }, [rest.expanded]);
-
-  const handleClick = React.useCallback(
-    (ev: SyntheticEvent<>) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      setExpanded(!expanded);
-    },
-    [expanded]
-  );
-
-  const handleExpand = React.useCallback(() => {
-    setExpanded(true);
-  }, []);
-
-  const showDisclosure = !!children && !hideDisclosure;
   const activeStyle = {
     color: theme.text,
-    background: theme.sidebarItemBackground,
     fontWeight: 600,
+    background: theme.sidebarItemBackground,
     ...style,
   };
 
   return (
-    <Wrapper column>
-      <StyledNavLink
-        activeStyle={activeStyle}
-        style={active ? activeStyle : style}
-        onClick={onClick}
-        exact={exact !== false}
-        to={to}
-        as={to ? undefined : href ? "a" : "div"}
-        href={href}
-      >
-        {icon && <IconWrapper>{icon}</IconWrapper>}
-        <Label onClick={handleExpand}>
-          {showDisclosure && (
-            <Disclosure expanded={expanded} onClick={handleClick} />
-          )}
-          {label}
-        </Label>
-        {menu && <Action menuOpen={menuOpen}>{menu}</Action>}
-      </StyledNavLink>
-      {expanded && children}
-    </Wrapper>
+    <StyledNavLink
+      $isActiveDrop={isActiveDrop}
+      activeStyle={isActiveDrop ? undefined : activeStyle}
+      style={active ? activeStyle : style}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      exact={exact !== false}
+      to={to}
+      as={to ? undefined : href ? "a" : "div"}
+      href={href}
+      ref={innerRef}
+    >
+      {icon && <IconWrapper>{icon}</IconWrapper>}
+      <Label>{label}</Label>
+      {menu && <Action menuOpen={menuOpen}>{menu}</Action>}
+    </StyledNavLink>
   );
 }
 
@@ -133,12 +106,20 @@ const StyledNavLink = styled(NavLink)`
   text-overflow: ellipsis;
   padding: 4px 16px;
   border-radius: 4px;
-  color: ${(props) => props.theme.sidebarText};
+  background: ${(props) =>
+    props.$isActiveDrop ? props.theme.slateDark : "inherit"};
+  color: ${(props) =>
+    props.$isActiveDrop ? props.theme.white : props.theme.sidebarText};
   font-size: 15px;
   cursor: pointer;
 
+  svg {
+    ${(props) => (props.$isActiveDrop ? `fill: ${props.theme.white};` : "")}
+  }
+
   &:hover {
-    color: ${(props) => props.theme.text};
+    color: ${(props) =>
+      props.$isActiveDrop ? props.theme.white : props.theme.text};
   }
 
   &:focus {
@@ -153,10 +134,6 @@ const StyledNavLink = styled(NavLink)`
   }
 `;
 
-const Wrapper = styled(Flex)`
-  position: relative;
-`;
-
 const Label = styled.div`
   position: relative;
   width: 100%;
@@ -164,11 +141,4 @@ const Label = styled.div`
   line-height: 1.6;
 `;
 
-const Disclosure = styled(CollapsedIcon)`
-  position: absolute;
-  left: -24px;
-
-  ${({ expanded }) => !expanded && "transform: rotate(-90deg);"};
-`;
-
-export default withRouter(withTheme(observer(SidebarLink)));
+export default withRouter(withTheme(SidebarLink));

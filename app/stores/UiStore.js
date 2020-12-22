@@ -9,6 +9,9 @@ import type { Toast } from "types";
 const UI_STORE = "UI_STORE";
 
 class UiStore {
+  // has the user seen the prompt to change the UI language and actioned it
+  @observable languagePromptDismissed: boolean;
+
   // theme represents the users UI preference (defaults to system)
   @observable theme: "light" | "dark" | "system";
 
@@ -20,6 +23,7 @@ class UiStore {
   @observable editMode: boolean = false;
   @observable tocVisible: boolean = false;
   @observable mobileSidebarVisible: boolean = false;
+  @observable sidebarCollapsed: boolean = false;
   @observable toasts: Map<string, Toast> = new Map();
 
   constructor() {
@@ -47,6 +51,8 @@ class UiStore {
     }
 
     // persisted keys
+    this.languagePromptDismissed = data.languagePromptDismissed;
+    this.sidebarCollapsed = data.sidebarCollapsed;
     this.tocVisible = data.tocVisible;
     this.theme = data.theme || "system";
 
@@ -66,6 +72,11 @@ class UiStore {
     if (window.localStorage) {
       window.localStorage.setItem("theme", this.theme);
     }
+  };
+
+  @action
+  setLanguagePromptDismissed = () => {
+    this.languagePromptDismissed = true;
   };
 
   @action
@@ -96,6 +107,21 @@ class UiStore {
   clearActiveDocument = (): void => {
     this.activeDocumentId = undefined;
     this.activeCollectionId = undefined;
+  };
+
+  @action
+  collapseSidebar = () => {
+    this.sidebarCollapsed = true;
+  };
+
+  @action
+  expandSidebar = () => {
+    this.sidebarCollapsed = false;
+  };
+
+  @action
+  toggleCollapsedSidebar = () => {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   };
 
   @action
@@ -181,6 +207,8 @@ class UiStore {
   get asJson(): string {
     return JSON.stringify({
       tocVisible: this.tocVisible,
+      sidebarCollapsed: this.sidebarCollapsed,
+      languagePromptDismissed: this.languagePromptDismissed,
       theme: this.theme,
     });
   }
